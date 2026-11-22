@@ -1,0 +1,10 @@
+Sedan: Graphite four-door sedan by Innerscene (CC0 1.0).
+https://www.innerscene.com/tools/library/3d-parts/graphite-four-door-sedan-eed96d12
+Adaptation: selected parts, simplified triangles, axis and scale conversion, game materials.
+
+Head: MakeHuman Community base mesh (asset license CC0 1.0).
+https://github.com/makehumancommunity/makehuman/blob/master/makehuman/data/3dobjs/base.obj
+https://github.com/makehumancommunity/makehuman/blob/master/LICENSE.md
+Adaptation: head crop, simplified triangles and game proportions.
+
+https://creativecommons.org/publicdomain/zero/1.0/

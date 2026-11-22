@@ -1,0 +1,92 @@
+# Midnight Expressway
+
+- WebGL2 kết xuất tuyến vòng 4,8 km qua thành phố và xáo trộn thứ tự các đoạn nông thôn, núi, ven biển, cầu treo và hầm mỗi lượt.
+- Camera trong cabin mở rộng tầm nhìn trên smartphone. Menu và HUD cho phép chọn thời gian và thời tiết.
+- Máy bay xuất hiện theo lịch ngẫu nhiên ở hai nhóm khoảng cách, với vệt khói tan dần.
+- Góc nhìn thứ ba hạ xuống 1,18 m. Tắt vệt đèn trên đường ban ngày và giữ chân núi ngoài hành lang đường cong.
+- Camera bám đuôi mặc định thấp 0,90 m, lệch phải 1,60 m. Camera setup cho phép chỉnh ba trục và đặt lại. Vuốt để xoay hướng nhìn. Bóng đèn đêm có quầng cyan và vệt lóe.
+- Thêm ruộng theo luống, người đi bộ, bụi cỏ, suối núi và tàu di chuyển ven biển, dưới cầu. Mặt trời chiếu sáng theo hướng, sao đổi cường độ theo thời tiết.
+- E hoặc Exit/Enter car để xuống xe đã dừng và lên lại cạnh cửa. WASD hoặc các nút hướng để đi bộ, Space hoặc Jump để nhảy.
+- Khi đi bộ, camera xoay theo hướng di chuyển và hỗ trợ cần analog ảo. Nhân vật va chạm với xe và lan can. Xe AI phanh trước người qua đường, dừng và chạy lại khi làn trống.
+- E cạnh cửa để đổi sang xe đang dừng. Mô phỏng va chạm theo khối lượng, tách thân xe và trượt/xoay sau va chạm. Lối hở lan can dẫn vào các khu ven đường, có thể nhảy và đáp trên vật thể thấp.
+- Camera đi bộ giữ hướng do người chơi vuốt và theo sát vị trí ngoài cao tốc. Analog, vuốt và nhảy nhận từng ngón riêng. Va chạm mạnh có thể làm mô tô lật và văng người lái. Nhân vật gần camera có thêm mặt, tóc, giày và chi tiết áo.
+- Camera vuốt đủ 360°. Rời xe đang chạy tạo quán tính và phản ứng ngã theo vận tốc, sau đó nhân vật tự lấy lại tư thế đứng.
+- Nhánh ra khu phố và khu dân cư nối lại cao tốc, có ngã ba, vạch dừng và đèn giao thông. Xe AI dừng trước vạch rồi đi khi đèn xanh.
+- Giữ Brake để hãm xe rồi lùi, Gas hãm đà lùi trước khi tiến. Lối ra theo làn ngoài và dùng chung góc thân xe cho cụm đèn và luồng đèn pha.
+- Mỗi lượt chọn cảnh Việt Nam cho từng loại địa hình. Có nhà mái ngói, nhà sàn, cờ, đầm sen, ruộng bậc thang, vịnh đá, bờ biển và các màu cầu, hầm khác nhau.
+- Mây trôi, mặt nước WebGL2 có gợn và phản xạ nắng theo góc nhìn. Xe, người và vật ven đường có bóng động theo mặt trời.
+- Ngoại hình người chơi và tài xế đổi mỗi lượt. Chuyển động ngã thêm chống tay, co chân và chuyển qua tư thế chống gối trước khi đứng thẳng.
+- Dáng đi dựa trên GIF với pha chống/vung chân, gập gối, đặt gót và đánh tay ngược nhịp. Lên xe đã dừng từ mọi phía.
+- Xe người chơi chạy qua địa hình trống, dùng va chạm theo bước ngắn với lan can, nhà và vật cản. Ô tô con có tài xế 3D sau bốn mặt kính.
+- Nước nông xanh ngọc, bọt bờ và gợn chuyển động. Gió có nét cong. Nhánh chỉ vẽ phần ngoài mép đường chính.
+- Dáng đi giữ hướng bước khi xoay camera và dùng chung cho người ven đường. Xe AI có thể hất văng người nếu lao vào quá sát, sau đó người tự đứng dậy.
+- Nhánh cao tốc hạ tốc có gia tốc, nới khoảng trống lan can và dùng chuyển tiếp theo thời gian lúc tách/nhập.
+- Người lái ngồi gập chân, tay đặt lên vô-lăng hoặc ghi đông. Mô tô AI có mũ, có thể chở khách. Sóng biển nâng lưới 3D, tạo bọt đỉnh và tàu nổi theo mặt sóng.
+- Camera/C đổi góc nhìn khi đi bộ hoặc đi xe; mô tô có ghi đông, tay lái và gương ở góc nhìn thứ nhất.
+- Cây, cỏ, nhà và người ven đường dùng khoảng trống quanh đường và vật thể; thêm dáng cây, hình thể, tóc, áo và cảnh xa đơn giản. Bỏ cờ.
+- Ô tô AI ngẫu nhiên hành khách theo ghế. Va chạm nặng làm xe lật, bốc khói, cháy rồi có thể nổ. Gió uốn và tan theo từng cơn. Giữ tiến ba giây để chạy với dáng riêng.
+- Shader xác định nền và mặt đường theo vật liệu để tuyết không tạo mảng trắng trên làn xe. Camera mặc định 1,60 m, chạy bộ 8 m/s. Hạ ngưỡng hư hỏng và lật cho xe AI.
+- Bỏ bóng cố định dưới gầm ô tô, mô tô và xe tải. Va chạm làm thân xe móp theo hướng tác động, xe chúi hoặc nảy, mảnh vỡ rơi và nảy trên mặt đất.
+- Kính ô tô pha trong suốt kể cả khi không có người ngồi. Tắt bloom hậu kỳ. Nhân vật ngã có thể bật lại khi va vật cản. Hạ ngưỡng lật và tăng đà lộn xe.
+- Camera thứ ba mặc định ở giữa. Cài đặt Lái ban đêm dùng góc lệch cũ. Đánh lái hết ở tốc độ thấp để quay đầu. Thêm gầm ô tô, xe tải và tư thế dừng sau lật theo điểm chạm.
+- Màu mặt biển xa nối tới chân trời theo hướng camera, bỏ dải nền xám ở Mũi Né và các cảnh biển.
+- Xe đổ theo trọng lực quanh điểm tì và lái tiếp khi về bốn bánh. Thêm âm va chạm, trượt bánh, nhạc bật riêng, đảo vuốt ngang và đoạn đèo núi uốn khúc có dốc.
+- Cho phép dựng xe còn hoạt động khi đã dừng. Giữ một hướng 2 giây để chạy. Mâm bánh quay theo quãng đường, khuôn mặt có chớp mắt và biểu cảm, kết xuất tối đa 60 FPS.
+- Camera giữ khoảng cách trên mặt đất. Tài xế phản ứng khi bị chặn hoặc lấy xe. Autopilot kiểm tra khoảng trống để lùi và sang làn. Bắt đầu ở địa điểm ngẫu nhiên, bật hiệu ứng mặc định, luân phiên nhạc và rút ngắn chớp mắt.
+- Dời chân núi ra ngoài đường cong, chọn điểm xuất hiện có khoảng trống giao thông. Bật nhạc và hiệu ứng khi bắt đầu. Thêm mức đồ họa Thấp, Trung bình, Cao nhất với tầm nhìn, chi tiết và cỏ khác nhau.
+- Cân lại chiều cao nhân vật, kích thước xe, cabin và vật thể ven đường. Dùng chung kích thước thân xe với va chạm. Đồ họa Cao nhất mặc định, có biểu tượng ẩn HUD riêng.
+- Chuyển nút khi chơi sang biểu tượng có nhãn trợ năng. Gom tùy chọn vào bảng cài đặt. Giữ các nút lái và tương tác khi ẩn HUD.
+- Mui xe có độ dày và trụ kính. Đảo vuốt dọc. Tài xế nói tiếng Việt qua giọng thiết bị. Thêm kiểu mặt tiền, mái và dáng núi. Đàn chim, máy bay chọn khoảng cách và độ cao an toàn qua các vùng.
+- Thêm ba chủ đề màu đồ họa độc lập với chất lượng. Dọn xác xe và va chạm sau 5 giây kể từ vụ nổ.
+- Tương phản cao mặc định. Thêm vân nhựa đường, sơn xe, mặt tiền và sườn núi theo chất lượng đồ họa WebGL.
+- Thay nhạc nền bằng ba bản synthwave tự tạo với bass synth, hợp âm và trống điện tử.
+- Chiếu khoang lái theo hướng đầu xe khi xoay camera. Tăng nhạc tới mức tối đa có giới hạn đỉnh, bổ sung còi AI khi bị chặn hoặc lấy xe.
+- Giảm chói sáng và quầng nắng, tắt phụ đề AI, thêm thanh âm lượng riêng cho nhạc và hiệu ứng.
+- Camera đo độ cao theo mặt đường ngay dưới vị trí camera. Đồng bộ kích thước theo mét giữa thân xe, nhà ven đường và va chạm. Xác nhận lời thoại AI chỉ phát âm thanh.
+- Ánh đèn pha và đèn đường dùng độ cao tương đối so với mặt đèo. Vùng sáng đèn đường khớp vị trí cột, vệt sáng xe AI chia đoạn theo dốc.
+- Chủ đề Hoạt họa dùng đổ bóng cel, mây và ánh hoàng hôn, cỏ lay và cảnh hồ ven thành phố trên đèo. Lưu chủ đề giữa các lần mở game.
+- Kiểm tra lan can theo toàn bộ thân xe khi dịch chuyển, bị đẩy hoặc đổi hướng.
+- Dọn xe nằm nghiêng sau 5 giây, giữ chạy khi đổi hướng, chỉnh dáng đi, thêm dấu chân cát, lốp dày, các mẫu tàu và NPC ven đường.
+- Chặn và xử lý chồng lấn nhân vật với vật cản. Tự lái chỉnh hướng xe chéo và thoát khi bị chặn. Camera theo độ cao nhảy; giới hạn vệt đèn theo mặt đường cong trên đèo.
+- Camera xe tải riêng cho cabin và góc bám. Kiểm tra thân người khi ngã, thêm pha chống tay ngồi dậy. Tăng hiệu ứng âm thanh có nén đỉnh, bỏ hạt tuyết và chữ hành động.
+- Bỏ dòng địa danh, thời gian và thời tiết. Tự lái thoát kẹt qua làn trống khi không thể lùi, loại va chạm giả trên cua. Bước chân bám mặt cát dốc.
+- Nối bờ biển với địa hình liền kề, đồng bộ vùng sóng. Đảo hai trục vuốt góc nhìn thứ nhất, thêm chi tiết cabin và cho NPC lùi hoặc đổi làn khi kẹt.
+- Thêm nội thất cabin 3D ở góc nhìn thứ nhất, thân xe cháy đen và dọn sau 5 giây kể từ lúc nổ, NPC trưởng thành có kiểu tóc, khuôn mặt và trang phục đa dạng.
+- Dọn xe nằm nghiêng hoặc úp nóc sau 5 giây ổn định. Tự lái và NPC giảm tốc trước cua, giảm thêm cho xe tải và khi mưa.
+- Ổn định camera sát trần cabin trên màn hình dọc, thêm tay lái 3D theo vô lăng hoặc ghi đông, giữ hướng khi đứng dậy và giới hạn xoay ở bước đầu.
+- Đảo chiều xoay vô lăng và hai tay trong cabin 3D.
+- Gỡ nhạc nền và nút nhạc. Thêm âm môi trường theo thời tiết, địa hình và xe gần nhất. Đồng bộ hướng gió với chuyển động cây và cỏ.
+- Chỉnh hướng và khoảng hở toàn thân xe tải trên cua đèo, tăng khoảng cách bám sau xe tải.
+- Làm mượt đổi làn và trả lái, thu nhỏ và nâng gương chiếu hậu trong cabin.
+- Chỉnh tư thế ngồi mô tô và gác chân, làm mượt ánh sáng ở đầu và cuối đèo, thêm rừng 336 m và tăng cây ở đồ họa cao nhất, gỡ Snow.
+- Phanh sớm và tăng khoảng cách trên cua đèo, hạn chế vượt khi cua gắt. Bo đỉnh và sườn núi bằng nhiều lớp lưới trong phạm vi chân núi cũ.
+- Gỡ vân sơn xe, vát cạnh các chi tiết xe và nhân vật, đa dạng dáng cây, cho NPC bấm còi và đổi câu thoại khi bị chặn kéo dài.
+- Bo tròn tán cây và cành, uốn lá cọ, bo đồi núi, đảo đá và đá ven đường. Dùng lưới đơn giản hơn cho cảnh xa.
+- Bắt đầu bằng xe ngẫu nhiên. Chế độ Lái một mình gỡ xe NPC, bảo vệ người chơi và cho tự lái đạt 250 km/h khi đường đủ thẳng.
+- Babylon.js ThinEngine quản lý shader, bộ đệm đỉnh động và lệnh vẽ WebGL2. Giữ lưới, shader và mô phỏng hiện có. Dựng lại gói Babylon với npm ci --prefix tools và npm run build --prefix tools.
+- Tiếp tục từ đồ họa v65. Dùng lưới MUSCLE_CAR cho toàn bộ xe, giữ mô phỏng ô tô và cabin, có ba mức chi tiết và bánh xoay riêng.
+
+- Gỡ model MUSCLE_CAR và khôi phục các mẫu xe dựng bằng mã từ v65.
+- Chuyển kết xuất từ Babylon.js ThinEngine sang Three.js 0.187.0. Giữ lưới, shader, hiệu ứng nhòe theo tốc độ và mô phỏng hiện có. Tạo lại thư viện bằng npm ci --prefix tools rồi npm run build --prefix tools.
+- Chế độ Hoạt họa dùng cel-shading ba mức theo pháp tuyến cho nắng, đèn đường và đèn pha. Giữ pha sương và độ trong của kính.
+- Giới hạn tối đa 15 xe cùng lúc, gồm xe người chơi và 14 xe giao thông. Rải đều xe trên tuyến vòng và chừa khoảng trống khi bật lại giao thông.
+- Sửa tự lái đứng yên ở cua khi thân xe chạm lan can. Kiểm tra khoảng trống phía trong trước khi dịch từng bước để lấy lại hướng và tăng ga.
+- Cabin kín tắt vệt gió và hạt thời tiết toàn màn hình. Mưa và lá bám kính chắn gió, cần gạt tự quét khi mưa. Giữ hiệu ứng ngoài xe và trên mô tô.
+- NPC lái mô tô đứng dậy, tìm đường về xe, dựng xe và lên yên chạy tiếp nếu xe còn hoạt động. Thêm hoạt ảnh tiếp cận, mở cửa ô tô hoặc xe tải, kéo tài xế xuống và lên xe; mô tô dùng động tác kéo khỏi yên. Xây dựng từ v73.
+- NPC bị kéo khỏi xe ngẫu nhiên bỏ chạy hoặc đuổi theo với xác suất ngang nhau. Nếu bắt kịp xe đang dừng hoặc chạy chậm, NPC kéo người chơi xuống và lấy lại xe. Thêm hoạt ảnh mở/đóng cửa khi lên xuống xe trống và động tác lên/xuống yên mô tô.
+- Kiểm tra đường tiếp cận và chỗ thả tài xế trước khi lấy xe. NPC đổi hướng tránh vật cản, có thể loạng choạng khi người chơi đẩy. Thêm đẩy nhẹ mô tô gần đứng yên. Cửa và kính xoay cùng bản lề theo từng thân xe, chuyển động kéo tài xế nối tiếp dáng ngã.
+- Hoạt ảnh vào xe theo GIF: đưa tay theo tay nắm, xoay hông, bước chân dẫn, cúi vào ghế và đóng cửa. Xe tải nhấc chân cao hơn để lên bậc. NPC phải chờ 4 giây kể từ khi người chơi lấy lại quyền lái mới được giành xe.
+- Giữ chân trụ theo tọa độ mặt đường khi bước vào xe, chuyển trọng tâm rồi hạ người xuống ghế. Camera neo cạnh cửa trong hoạt ảnh và nội suy từ khung hình hiện tại khi trả lại quyền lái.
+- Camera chuyển dần khi vào xe, xuống xe và bị NPC kéo xuống. Neo góc nhìn cạnh cửa, lọc thay đổi khoảng cách vì vật cản và hoãn hạ độ phân giải trong lúc chuyển cảnh.
+- Chuyển camera sau khi lên xe trong 1,32 giây. Góc nhìn thứ ba đi theo cung quanh xe, giảm tốc lia ngang và giữ khung hình liên tục khi bắt đầu lái.
+- Tạm bỏ kiểm tra chồng lấn nhân vật khi hoạt ảnh lên xuống xe đang chạy. Vật cản sát cửa không chặn thao tác; phục hồi va chạm khi hoạt ảnh kết thúc.
+- Thêm hoạt ảnh lên mô tô bằng cách nắm ghi đông, chống chân và vắt chân qua yên. Nhảy khỏi mô tô đang chạy làm xe trượt theo đà rồi đổ; có thể quay lại dựng xe còn hoạt động.
+- Tuyến chính có cụm tua-bin ngoài khơi lấy cảm hứng từ Bạc Liêu, khu tháp Chăm gạch đỏ với sân và lối bậc, cùng hầm xuyên khối núi có dãy đèn trần.
+- Kéo dài tuyến vòng lên 6,4 km, gồm đoạn rừng 520 m, đèo và ven biển mỗi đoạn 1.280 m, hầm 440 m. Thêm thác từ khe núi xuống suối. Chia bóng đổ theo lát đường và mép nền, giảm sọc vân đá.
+- Dùng trụ tua-bin 80 m và cánh 42 m, lùi xa bờ. Thác bắt đầu ở miệng khe và bám mặt đá xuống suối. Bo khối núi quanh hầm theo mặt cắt liên tục.
+- Đặt máng nguồn trong khe đá, dùng chung mép với đỉnh thác; máng dưới nối từ chân thác vào lòng suối.
+- Nạp 3 mẫu nhà và 4 mẫu cây Kenney (CC0) từ GLB đã tối ưu. Đổi màu mái và lá theo cảnh, dùng shader cel-shading hiện có. Giữ nhà sàn ở miền Tây, lưới đơn giản ở xa và kích thước va chạm nhà.
+- Ưu tiên xuất phát trên làn cao tốc trước cụm nhà và cây mẫu ở đầu vùng đồng quê. Dùng lưới giản lược từ cùng mẫu Kenney ở xa, giữ nhà sàn tại đoạn miền Tây và giữ vùng va chạm nhà.
+- Làm mới toàn bộ nhóm model 3D bằng lưới low-poly nguyên bản. Đổi thân và cabin của 6 phương tiện, nhân vật có khớp, động vật, nhà/cây, biển/đèn/lan can, tàu/máy bay, cầu, tua-bin, tháp Chăm, địa hình và hầm. Giữ tuyến, kích thước va chạm và liên kết hoạt ảnh; nhà và cây dùng hai mức chi tiết.
+- Tạo sườn thác thành lưới liền quanh khe và đường nước nối từ hồ nguồn xuống suối. Thêm đồi, dãy núi và đá Quaternius cùng texture 1K từ Poly Haven, nguồn CC0 trong dist/terrain/SOURCES.txt.
+- Mức Cao nhất giữ lưới chi tiết đến 220 m với nhà, 150 m với cây chính, 115 m với cây phụ, 160 m với xe AI và 75 m với người. Giữ ngưỡng chi tiết ở mức Thấp và Trung bình.

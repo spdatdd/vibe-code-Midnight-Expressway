@@ -1,0 +1,13 @@
+Midnight Expressway — Terrain assets (CC0 1.0)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Meshes by Quaternius, normalized from glTF:
+Mountain: https://poly.pizza/m/7HYR2s9JVi
+Mountains: https://poly.pizza/m/w9VBrh7Nz0
+Rock: https://poly.pizza/m/aCtxEoSLEZ
+
+land-detail.webp uses the diffuse maps from Poly Haven as terrain detail.
+Red: Aerial Grass Rock — https://polyhaven.com/a/aerial_grass_rock
+Green: Rocky Terrain and Mossy Rock — https://polyhaven.com/a/rocky_terrain
+        https://polyhaven.com/a/mossy_rock
+Blue: Rock Face — https://polyhaven.com/a/rock_face

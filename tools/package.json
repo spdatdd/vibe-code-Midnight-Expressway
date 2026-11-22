@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "esbuild": "0.27.1",
+    "three": "0.187.0"
+  },
+  "scripts": {
+    "build": "esbuild three-entry.js --bundle --minify --legal-comments=inline --format=iife --global-name=MidnightThree --outfile=../dist/vendor/three.js"
+  }
+}
