@@ -17,7 +17,7 @@ public class MainActivity extends BridgeActivity {
 
     // Khôi phục chế độ toàn màn hình khi quay lại game từ ứng dụng khác.
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         enterImmersiveMode();
     }
