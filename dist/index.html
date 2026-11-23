@@ -7,7 +7,7 @@
 <title>Midnight Expressway</title>
 <style>
 *{box-sizing:border-box}body{margin:0;color:#f4f3ff;background:#090b1a;font:16px system-ui,sans-serif;overflow:hidden}canvas,.cover{position:fixed;inset:0;width:100%;height:100%}canvas{display:block}.cover{display:grid;align-items:center;padding:8vw;background:linear-gradient(90deg,#080918ed,#08091869 47%,transparent 85%)}[hidden]{display:none!important}h1{font-size:clamp(45px,9vw,140px);line-height:.83;letter-spacing:-.075em;margin:0 0 .35em;text-transform:uppercase;font-style:italic;text-shadow:0 6px 40px #070812}h1 span{display:block;color:#ffcb8b}button{background:#13172be8;color:inherit;border:1px solid #8b88a9;border-radius:5px;padding:.7em 1em;font:600 14px system-ui;cursor:pointer;touch-action:none}button:focus-visible{outline:2px solid #ffcb8b;outline-offset:4px}#start{background:#ffcb8b;color:#171220;border:0;padding:.95em 1.6em}.hud{position:fixed;inset:auto 3vw max(3vh,env(safe-area-inset-bottom));display:flex;align-items:end;gap:12px;text-shadow:0 2px 6px #000}.hud output{font:italic 800 clamp(24px,4vw,54px) system-ui;min-width:5.2em}.hud small{margin-right:auto;font-size:14px;color:#e1dfef}.touch{display:none;position:fixed;inset:auto 3vw 13vh;justify-content:space-between;pointer-events:none}.touch button{pointer-events:auto;min-width:58px;min-height:52px;user-select:none}.touch button.active{background:#fbc887;color:#15121f}@media(pointer:coarse){.touch{display:flex}.hud small{display:none}.hud output{margin-right:auto}}@media(max-width:550px){.hud small{display:none}.hud output{margin-right:auto}}
-</style>
+#start:disabled{cursor:wait;opacity:.72}#start-status{color:#f1e7df;min-height:1.5em;margin:.8em 0 0}</style>
 <style>
 .hud button[aria-pressed=true]{border-color:#b9e5ff;background:#283f60}
 @media(max-width:425px){.hud{gap:5px}.hud button{padding:.65em .46em;font-size:13px}.hud output{min-width:0;white-space:nowrap;font-size:clamp(18px,5vw,24px)}}
@@ -32,6 +32,8 @@
 @media(max-width:380px){.hud{flex-wrap:wrap;gap:3px}.hud button{padding:.5em .35em;font-size:12px}.camera-panel{top:calc(127px + env(safe-area-inset-top));max-height:calc(100dvh - 195px)}}
 @media(orientation:landscape) and (max-height:450px){.camera-panel{top:calc(48px + env(safe-area-inset-top));max-height:calc(100dvh - 112px)}}
 #vehicle-actions{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:calc(62px + env(safe-area-inset-bottom));display:flex;gap:6px;align-items:center}
+#vehicle-select{color:#f4f3ff;background:#13172be8;border:1px solid #8b88a9;border-radius:5px;padding:.55em;font:600 14px system-ui}
+#vehicle-change-status:not(:empty){position:absolute;right:0;bottom:100%;width:max-content;max-width:80vw;margin:0 0 6px;padding:.4em .6em;background:#13172be8;border-radius:5px}
 @media(pointer:coarse){#vehicle-actions{bottom:calc(max(140px,13vh + 60px) + env(safe-area-inset-bottom))}}
 #walk-stick{display:none;position:fixed;left:max(15px,env(safe-area-inset-left));bottom:calc(75px + env(safe-area-inset-bottom));width:114px;height:114px;border-radius:50%;border:1px solid #9fb2d3a0;background:#131b32ba;touch-action:none;user-select:none}
 #walk-stick span{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#839ec6c9;border:1px solid #ccdcf6;pointer-events:none}
@@ -67,6 +69,10 @@ canvas[data-scene-theme="creative"]{filter:hue-rotate(46deg) saturate(1.65) cont
 <section class="camera-panel" id="settings-panel" aria-label="Cài đặt" hidden>
   <div class="options"><label>Time<select id="drive-time"><option value="auto">Cycle</option><option value="dawn">Dawn</option><option value="day">Day</option><option value="dusk">Dusk</option><option value="night">Night</option></select></label><label>Weather<select id="drive-weather"><option value="auto">Seasonal</option><option value="clear">Clear</option><option value="rain">Rain</option><option value="fog">Fog</option><option value="leaves">Falling leaves</option></select></label><label>Đồ họa<select id="graphics"><option value="low">Thấp</option><option value="medium">Trung bình</option><option value="highest" selected>Cao nhất</option></select></label><label>Chủ đề<select id="theme"><option value="realistic">Tả thực</option><option value="animated">Hoạt họa</option><option value="creative">Sáng tạo</option><option value="contrast" selected>Tương phản cao</option></select></label></div>
   <label><input id="solo-drive" type="checkbox"> Lái một mình</label>
+  <label>Xe NPC <output id="traffic-density-value" for="traffic-density">14 xe</output><input id="traffic-density" type="range" min="0" max="36" step="1" value="14"></label>
+  <label>Người đi bộ NPC <output id="pedestrian-density-value" for="pedestrian-density">100%</output><input id="pedestrian-density" type="range" min="0" max="150" step="5" value="100"></label>
+  <label>Mật độ cây <output id="tree-density-value" for="tree-density">1.6×</output><input id="tree-density" type="range" min="0.4" max="2.4" step="0.1" value="1.6"></label>
+  <label>Tầm render vật thể <output id="object-distance-value" for="object-distance">750 m</output><input id="object-distance" type="range" min="150" max="750" step="25" value="750"></label>
   <label>Hiệu ứng âm thanh <output id="effects-volume-value" for="effects-volume">100%</output><input id="effects-volume" type="range" min="0" max="100" value="100"></label>
   <button id="camera-settings" type="button" aria-controls="camera-panel" aria-expanded="false">Vị trí camera</button>
 </section>
@@ -79,11 +85,13 @@ canvas[data-scene-theme="creative"]{filter:hue-rotate(46deg) saturate(1.65) cont
 </section>
 <button id="hud-toggle" hidden type="button" aria-label="Ẩn HUD" title="Ẩn HUD" aria-pressed="true" aria-controls="hud drive-settings settings-panel camera-panel"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg></button>
 <div class="hud" id="hud" hidden>
-  <output id="speed">0 km/h</output><small>WASD / Arrows · C Camera · P Autopilot · E Take/exit car · Space Jump · Đánh lái hết ở tốc độ thấp để quay đầu</small>
+  <output id="speed">0 km/h</output><small>WASD / ↑↓←→ · C Camera · P Tự lái · E Lên/xuống · V Đổi xe · Space Nhảy · Đánh hết lái ở tốc độ thấp để quay đầu</small>
   <button id="autopilot" class="icon-btn" type="button" aria-pressed="false" aria-label="Tự lái" title="Tự lái"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM4 10l6 2m10-2-6 2m-2 2v7m2-9a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/></svg></button>
   <button id="camera" class="icon-btn" type="button" aria-label="Đổi góc nhìn" title="Đổi góc nhìn"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h4l2-3h6l2 3h4v13H3Z M15 13a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></button><button id="sound" class="icon-btn" type="button" aria-pressed="false" aria-label="Hiệu ứng âm thanh" title="Hiệu ứng âm thanh"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h4l5-4v14l-5-4H3Z M16 9a4 4 0 0 1 0 6m2-9a8 8 0 0 1 0 12"/></svg></button>
 </div>
 <div id="vehicle-actions" hidden>
+  <p id="vehicle-change-status" role="status"></p>
+  <select id="vehicle-select" aria-label="Đổi xe" title="Đổi xe (V)"><option value="0">Xe thể thao</option><option value="1">Sedan</option><option value="3">SUV</option><option value="4">Xe máy</option><option value="5">Xe tải</option></select>
   <button id="vehicle-interact" class="icon-btn" type="button" aria-label="Xuống xe" title="Xuống xe"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10v16H3Z M9 12h.1 M14 12h8m-3-3 3 3-3 3"/></svg></button>
   <button id="jump" class="icon-btn" type="button" hidden aria-label="Nhảy" title="Nhảy"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-5 5 5-5 5 5M5 20h14"/></svg></button>
 </div>
@@ -92,13 +100,8 @@ canvas[data-scene-theme="creative"]{filter:hue-rotate(46deg) saturate(1.65) cont
   <div><button class="icon-btn" type="button" data-control="left" aria-label="Rẽ trái" title="Rẽ trái"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button> <button class="icon-btn" type="button" data-control="right" aria-label="Rẽ phải" title="Rẽ phải"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button></div>
   <div><button class="icon-btn" type="button" data-control="brake" aria-label="Phanh hoặc lùi" title="Phanh hoặc lùi"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14v12H5Z M8 15l4-6m0 6 4-6"/></svg></button> <button class="icon-btn" type="button" data-control="gas" aria-label="Tăng ga" title="Tăng ga"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 16 6-6 6 6m-12-6 6-6 6 6"/></svg></button></div>
 </div>
-<section class="cover" id="cover"><div><h1>Midnight <span>Expressway</span></h1><div class="options"><label>Time<select id="time"><option value="auto">Cycle</option><option value="dawn">Dawn</option><option value="day">Day</option><option value="dusk">Dusk</option><option value="night">Night</option></select></label><label>Weather<select id="weather"><option value="auto">Seasonal</option><option value="clear">Clear</option><option value="rain">Rain</option><option value="fog">Fog</option><option value="leaves">Falling leaves</option></select></label></div><label>Chủ đề<select id="cover-theme"><option value="realistic">Tả thực</option><option value="animated">Hoạt họa</option><option value="creative">Sáng tạo</option><option value="contrast" selected>Tương phản cao</option></select></label><button id="start" type="button">Start Drive</button></div></section>
-<script src="sky3d.js?v=models-refresh"></script>
-<script src="vendor/three.js?v=terrain"></script>
-<script src="scenery-models.js?v=models-refresh"></script>
-<script src="terrain/models.js?v=terrain"></script>
-<script src="licensed-models.js?v=1"></script>
-<script src="world3d.js?v=city-approach"></script>
-<script src="drive.js?v=licensed-models"></script>
+<section class="cover" id="cover"><div><h1>Midnight <span>Expressway</span></h1><div class="options"><label>Time<select id="time"><option value="auto">Cycle</option><option value="dawn">Dawn</option><option value="day">Day</option><option value="dusk">Dusk</option><option value="night">Night</option></select></label><label>Weather<select id="weather"><option value="auto">Seasonal</option><option value="clear">Clear</option><option value="rain">Rain</option><option value="fog">Fog</option><option value="leaves">Falling leaves</option></select></label></div><label>Chủ đề<select id="cover-theme"><option value="realistic">Tả thực</option><option value="animated">Hoạt họa</option><option value="creative">Sáng tạo</option><option value="contrast" selected>Tương phản cao</option></select></label><button id="start" type="button">Start Drive</button><p id="start-status" role="status" hidden></p></div></section>
+<script src="vendor/three.js?v=cloud-volume"></script>
+<script type="module" src="drive.js?v=esm"></script>
 </body>
 </html>

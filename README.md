@@ -4,18 +4,18 @@ Midnight Expressway là game lái xe arcade 3D trên trình duyệt. Bạn có t
 
 ## Chạy game trên máy
 
-Bạn cần Python 3 và trình duyệt hỗ trợ WebGL 2. Bản chơi đã có sẵn trong thư mục `dist/`, kèm thư viện Three.js và tài nguyên của game.
+Bạn cần Node.js và trình duyệt hỗ trợ WebGL 2. Bản chơi đã có sẵn trong thư mục `dist/`, kèm thư viện Three.js và tài nguyên của game. Máy chủ dùng các mô-đun có sẵn của Node.js nên có thể chạy ngay sau khi tải dự án về.
 
 1. Mở PowerShell tại thư mục gốc của dự án và chạy:
 
    ```powershell
-   python -m http.server 8000 --bind 127.0.0.1 --directory dist
+   npm start
    ```
 
 2. Mở [http://127.0.0.1:8000](http://127.0.0.1:8000/) trong trình duyệt và chọn **Start Drive**.
 3. Nhấn **Ctrl+C** trong PowerShell để dừng máy chủ.
 
-Nếu Windows nhận lệnh `py` thay cho `python`, dùng `py -3` ở đầu lệnh. Nếu cổng 8000 đang được sử dụng, đổi sang cổng khác trong cả lệnh và địa chỉ trình duyệt.
+Nếu cổng 8000 đang được sử dụng, chạy `$env:PORT = '8080'; npm start` trong PowerShell rồi mở [http://127.0.0.1:8080](http://127.0.0.1:8080/).
 
 ## Điều khiển
 
@@ -27,6 +27,7 @@ Nếu Windows nhận lệnh `py` thay cho `python`, dùng `py -3` ở đầu l�
 | **C** | Đổi góc camera |
 | **P** | Bật hoặc tắt chế độ tự lái |
 | **E** | Xuống xe hoặc lên xe khi đứng gần |
+| **V** | Đổi sang mẫu tiếp theo khi xe đã dừng |
 | **Space** | Nhảy khi đi bộ |
 
 Khi đi bộ, dùng **WASD** hoặc các phím mũi tên để di chuyển. Trên màn hình cảm ứng, dùng các nút lái trên màn hình và cần ảo khi đi bộ.
@@ -41,3 +42,9 @@ npm --prefix tools run build
 ```
 
 Lệnh build cập nhật `dist/vendor/three.js`.
+
+## Nén model GLB
+
+Đặt model nguồn trong `assets/models/`. Git bỏ qua thư mục này. Sau khi cài công cụ bằng `npm --prefix tools ci`, chạy `npm --prefix tools run optimize-models`. Lệnh xuất toàn bộ GLB đã nén vào `assets/models-optimized/` và chép các model game sử dụng vào `dist/assets/models-optimized/`.
+
+Khi build APK bằng Capacitor, đặt `webDir` là `dist` để đóng gói bản chơi cùng các model tối ưu. Thư mục model gốc nằm ngoài `webDir`.

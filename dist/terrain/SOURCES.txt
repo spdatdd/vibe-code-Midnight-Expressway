@@ -6,8 +6,10 @@ Mountain: https://poly.pizza/m/7HYR2s9JVi
 Mountains: https://poly.pizza/m/w9VBrh7Nz0
 Rock: https://poly.pizza/m/aCtxEoSLEZ
 
-land-detail.webp uses the diffuse maps from Poly Haven as terrain detail.
+land-detail.png uses 1K diffuse maps from Poly Haven (CC0 1.0) as terrain detail:
 Red: Aerial Grass Rock — https://polyhaven.com/a/aerial_grass_rock
-Green: Rocky Terrain and Mossy Rock — https://polyhaven.com/a/rocky_terrain
-        https://polyhaven.com/a/mossy_rock
-Blue: Rock Face — https://polyhaven.com/a/rock_face
+Green: Brown Mud Rocks 01 — https://polyhaven.com/a/brown_mud_rocks_01
+Blue: Cliff Side — https://polyhaven.com/a/cliff_side
+
+Nature 3D models (trees, bushes, grass) by Kenney Nature Kit (CC0 1.0):
+https://github.com/shorepine/kenney/tree/main/3d/nature

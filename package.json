@@ -1,0 +1,7 @@
+{
+  "name": "midnight-expressway",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}

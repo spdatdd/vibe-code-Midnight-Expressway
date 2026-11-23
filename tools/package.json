@@ -1,9 +1,15 @@
 {
   "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
     "esbuild": "0.27.1",
+    "meshoptimizer": "1.3.0",
+    "sharp": "0.35.5",
     "three": "0.187.0"
   },
   "scripts": {
-    "build": "esbuild three-entry.js --bundle --minify --legal-comments=inline --format=iife --global-name=MidnightThree --outfile=../dist/vendor/three.js"
+    "build": "esbuild three-entry.js --bundle --minify --legal-comments=inline --format=iife --global-name=MidnightThree --outfile=../dist/vendor/three.js",
+    "optimize-models": "node optimize-models.mjs"
   }
 }

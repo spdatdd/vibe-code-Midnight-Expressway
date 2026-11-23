@@ -1,186 +1,183 @@
-'use strict';
+import { DAY_SECONDS, LOOP, TAU, clamp, hash, mod } from './src/constants.js';
+import { center, district, eachCityBuilding, eachWindTurbine, passSample } from './src/route.js';
+import { passHeights, runtime, state, usesAnimatedTheme, world } from './src/runtime.js';
+import { modelMeters } from './src/model-scale.js';
 
-const skyCloudProfiles=[
-  [[-22,-1,0,20,5,13],[-7,4,2,19,12,17],[12,6,-5,15,15,12],[29,0,2,18,6,10]],
-  [[-35,0,4,29,4.8,12],[-1,2,0,36,5.8,9],[31,-1,-4,27,3.3,9],[55,-3,-7,12,2.2,6]],
-  [[-16,-4,7,21,7,16],[12,-3,-6,24,7,15],[.5,8,5,17,11,13],[6,19,-1,13,12,11],[19,14,-7,9,9,8]],
-  [[-27,.3,3,17,4,9],[-14,4,-3,12,7,10],[13,2,3,10,4.5,7],[32,0,-6,19,5.5,13]]
-];
-const skyFlightClock={last:0,planeAt:0,birdsAt:0,plane:null,birds:null};
-const skyCloudCache=new Map();
-const skyCloudBands=[
-  ['#233557','#273a60','#2c3f65'],
-  ['#334871','#3c507a','#3a4d76'],
-  ['#465d84','#50678f','#496188'],
-  ['#587399','#617da0','#567396']
-];
+export const skyFlightClock={last:-1,planeAt:0,birdsAt:0,planes:[],birds:[]};
+const planeDuration=16;
+const planeSeparation=170;
+const flockDuration=12;
+// Mái nhà thành phố được kiểm tra riêng theo kích thước từng công trình.
+const ridgeHeight=[15,17,106,23,16,64,19];
 
-// Chuẩn bị mặt lưới mây tại một ô và dùng lại hình dạng trong suốt vòng đường.
-function buildCloudCell(cell) {
-  const z=cell*160+hash(cell+118)*90;
-  const x=center(z)+(hash(cell+193)-.5)*240;
-  const y=37+hash(cell+281)*32;
-  const seed=cell*41+7;
-  const profile=skyCloudProfiles[Math.floor(hash(seed)*skyCloudProfiles.length)];
-  const shape=.72+hash(seed+12)*.53;
-  const slant=(hash(seed+14)-.5)*.28;
-  const quads=[];
-  for(let i=0;i<profile.length;i++){
-    const [dx,dy,dz,rx,ry,rz]=profile[i], puffSeed=seed+i*17;
-    const rings=[];
-    for(let band=0;band<=4;band++){
-      const pitch=[-Math.PI/2,-.55,.0,.63,Math.PI/2][band];
-      const ring=[];
-      for(let step=0;step<10;step++){
-        const angle=step*TAU/10;
-        const swell=.86+hash(puffSeed+step*9+band*73)*.25;
-        const u=Math.cos(angle)*Math.cos(pitch)*rx*swell;
-        const v=(pitch<0?Math.sin(pitch)*.60:Math.sin(pitch))*ry;
-        const front=Math.sin(angle)*Math.cos(pitch)*rz*swell;
-        ring.push([x+(dx+u+front*slant)*shape,y+(dy+v)*shape,z+(dz+front)*shape]);
-      }
-      rings.push(ring);
-    }
-    for(let band=0;band<4;band++){
-      for(let step=0;step<10;step++){
-        const next=(step+1)%10;
-        const shade=skyCloudBands[band][Math.floor(hash(puffSeed+step)*3)];
-        quads.push([rings[band][step],rings[band][next],rings[band+1][next],rings[band+1][step],shade]);
-      }
-    }
-  }
-  return {x,quads};
-}
-
-// Vẽ các lớp mây 3D quanh camera và ghép tọa độ qua điểm nối cao tốc.
-function drawCloudField(quad,origin,originX,loop,now) {
-  const count=loop/160;
-  const drift=mod(now*.63,loop), crosswind=Math.sin(now*.016)*29;
-  const first=Math.floor((origin-drift-(yawCos<.35?480:90))/160);
-  const last=Math.floor((origin-drift+(yawCos<-.35?130:635))/160);
-  for(let i=first;i<=last;i++){
-    const cell=mod(i,count);
-    if(!skyCloudCache.has(cell)) skyCloudCache.set(cell,buildCloudCell(cell));
-    const cloud=skyCloudCache.get(cell);
-    if(Math.abs(cloud.x+crosswind-originX)>420) continue;
-    const wrap=(i-cell)*160+drift;
-    const shear=crosswind+Math.sin(now*.028+cell*.81)*3.5;
-    for(const [a,b,c,d,shade] of cloud.quads){
-      quad([a[0]+shear,a[1],a[2]+wrap],[b[0]+shear,b[1],b[2]+wrap],
-        [c[0]+shear,c[1],c[2]+wrap],[d[0]+shear,d[1],d[2]+wrap],shade,1,-2);
-    }
-  }
-}
-
-// Lấy một chuyến bay thưa, với hướng băng qua, tầm cao và tốc độ riêng.
-function flightClearance(flight,duration,margin){
+// Xét khoảng thời gian đường bay cắt hình chữ nhật của nhà đã nới theo sải cánh.
+export function buildingFlightClearance(flight,duration,margin,radius){
   let height=flight.y;
-  for(let time=0;time<=duration;time++){
-    const z=flight.z+flight.vz*time;
-    const check=28+Math.abs(flight.vz);
-    for(const offset of [-check,0,check]){
-      const area=district(z+offset);
-      const obstacle=area===2?96:area===0?63:area===3?39:area===4?21:10;
-      height=Math.max(height,obstacle+margin);
+  const endZ=flight.z+flight.vz*duration,padding=radius+18;
+  eachCityBuilding(Math.min(flight.z,endZ)-padding,Math.max(flight.z,endZ)+padding,(x,z,width,roof,depth)=>{
+    let entry=0,exit=duration;
+    for(const [start,speed,center,extent] of [[flight.x,flight.vx,x,depth*.5],[flight.z,flight.vz,z,width*.5]]){
+      const reach=extent+radius,offset=start-center;
+      if(Math.abs(speed)<.001){
+        if(Math.abs(offset)>reach) return;
+        continue;
+      }
+      const a=(-reach-offset)/speed,b=(reach-offset)/speed;
+      entry=Math.max(entry,Math.min(a,b));exit=Math.min(exit,Math.max(a,b));
+      if(entry>exit) return;
     }
-  }
+    height=Math.max(height,passSample(z,passHeights)+roof+margin);
+  });
   return height;
 }
-function newSkyPlane(now,originX,playerZ) {
-  const direction=Math.random()<.5?-1:1;
-  const near=Math.random()<.5;
-  const depth=near?115+Math.random()*55:295+Math.random()*145;
-  const speed=(near?19:32)+Math.random()*8;
-  const plane={begin:now,x:originX-direction*depth*(.45+Math.random()*.12),z:playerZ+depth,
-    y:near?17+Math.random()*15:54+Math.random()*34,vx:speed*direction,
-    vz:Math.max(6,state.v)+(Math.random()-.5)*14,span:.75+Math.random()*.28};
-  plane.y=flightClearance(plane,15,18);
-  return plane;
+
+// Bố trí các khối mây và ghép tọa độ qua điểm nối cao tốc.
+function drawCloudField(origin,originX,loop,now,glbSky){
+  const count=loop/160;
+  const drift=mod(now*.63,loop),crosswind=Math.sin(now*.016)*29;
+  const first=Math.floor((origin-drift-(runtime.yawCos<.35?480:90))/160);
+  const last=Math.floor((origin-drift+(runtime.yawCos<-.35?130:635))/160);
+  for(let i=first;i<=last;i++){
+    const cell=mod(i,count),z=cell*160+hash(cell+118)*90;
+    const x=center(z)+(hash(cell+193)-.5)*240,y=37+hash(cell+281)*32;
+    if(Math.abs(x+crosswind-originX)>420) continue;
+    const wrap=(i-cell)*160+drift;
+    const shear=crosswind+Math.sin(now*.028+cell*.81)*3.5;
+    glbSky.drawCloud(x+shear,y,z+wrap,cell);
+  }
+}
+
+// Tìm độ cao tuyệt đối an toàn trên toàn bộ quỹ đạo, kể cả sườn đèo và turbine.
+export function flightClearance(flight,duration,margin,radius=8){
+  let height=flight.y;
+  const turbines=[];
+  eachWindTurbine(flight.z,(x,z)=>turbines.push([x,z,passSample(z,passHeights)+modelMeters.turbine[1]]));
+  const reach=radius+Math.hypot(flight.vx,flight.vz)*.5;
+  for(let time=0;time<=duration;time+=.5){
+    const x=flight.x+flight.vx*time;
+    const z=flight.z+flight.vz*time;
+    for(const offset of [-reach,0,reach]){
+      const at=z+offset,area=district(at);
+      const across=Math.abs(x-center(at));
+      const obstacle=across<130+reach||area===2||area===5?ridgeHeight[area]??16:12;
+      height=Math.max(height,passSample(at,passHeights)+obstacle+margin);
+    }
+    for(const [tx,tz,top] of turbines)
+      if(Math.abs(x-tx)<reach+11&&Math.abs(z-tz)<reach+modelMeters.turbine[0]*.5)
+        height=Math.max(height,top+margin);
+  }
+  return buildingFlightClearance({...flight,y:height},duration,margin,radius);
+}
+// Tính khoảng cách nhỏ nhất trên mặt phẳng trong phần quỹ đạo trùng thời gian.
+function closestFlightDistance(plane,other){
+  const age=plane.begin-other.begin;
+  const remaining=Math.max(0,Math.min(planeDuration,planeDuration-age));
+  const dx=plane.x-(other.x+other.vx*age);
+  const dz=plane.z-skyFlightDepth(other.z+other.vz*age,plane.z,LOOP);
+  const vx=plane.vx-other.vx,vz=plane.vz-other.vz;
+  const rate=vx*vx+vz*vz;
+  const at=rate>0?clamp(-(dx*vx+dz*vz)/rate,0,remaining):0;
+  return Math.hypot(dx+vx*at,dz+vz*at);
+}
+
+// Chỉ coi là ngoài màn hình khi toàn bộ thân và hai cánh đã qua mép khung.
+export function planeStartsOffscreen(plane,origin,originX){
+  const x=plane.x-originX,z=plane.z-origin;
+  const forward=x*runtime.yawSin+z*runtime.yawCos;
+  const right=x*runtime.yawCos-z*runtime.yawSin;
+  const depth=forward*runtime.pitchCos+(plane.y-runtime.eye)*runtime.pitchSin;
+  const radius=modelMeters.airliner*plane.span*.74;
+  const edge=Math.max(runtime.cx,runtime.w-runtime.cx)/Math.max(1,runtime.focal);
+  return Math.abs(right)-radius>Math.max(1,depth+radius)*edge;
+}
+
+// Tạo máy bay ngoài mép camera, bay vào từ ngang và giữ khoảng cách với chuyến khác.
+export function newSkyPlane(now,origin,originX,active=[]){
+  const near=active.length?!active[0].near:false;
+  let best=null;
+  const cos=runtime.yawCos,sin=runtime.yawSin;
+  for(let i=0;i<6;i++){
+    const side=Math.random()<.5?-1:1;
+    const depth=near?145+Math.random()*60:510+Math.random()*70;
+    const acrossSpeed=(near?19:47)+Math.random()*(near?15:19);
+    // Thử các hướng lệch nhau để có thể bay vòng qua dãy nhà thay vì phải leo cao.
+    const alongSpeed=clamp(state.v*cos*Math.cos(state.heading??0)+state.v*sin*Math.sin(state.heading??0),-28,38)+(Math.random()-.5)*22;
+    const base=passSample(origin,passHeights)+(near?65+Math.random()*18:54+Math.random()*16);
+    const edge=Math.max(runtime.cx,runtime.w-runtime.cx)/Math.max(1,runtime.focal);
+    const plane={begin:now,near,x:0,z:0,y:base,
+      vx:alongSpeed*sin-side*acrossSpeed*cos,vz:alongSpeed*cos+side*acrossSpeed*sin,span:.87+Math.random()*.17};
+    const radius=modelMeters.airliner*plane.span*.74;
+    for(let gap=radius+12;gap<=radius+220;gap+=22){
+      const lateral=side*(Math.max(1,depth*runtime.pitchCos+(plane.y-runtime.eye)*runtime.pitchSin+radius)*edge+gap);
+      plane.x=originX+depth*sin+lateral*cos;
+      plane.z=origin+depth*cos-lateral*sin;
+      plane.y=flightClearance({...plane,y:base},planeDuration,26,radius);
+      if(planeStartsOffscreen(plane,origin,originX)) break;
+    }
+    if(!planeStartsOffscreen(plane,origin,originX)) continue;
+    if(active.some(other=>closestFlightDistance(plane,other)<planeSeparation
+      ||(plane.vx*other.vx+plane.vz*other.vz)/Math.hypot(plane.vx,plane.vz)/Math.hypot(other.vx,other.vz)>.95)) continue;
+    if(!best||plane.y<best.y) best=plane;
+    if(plane.y<=base) break;
+  }
+  return best;
 }
 
 // Tạo đàn chim bay chếch qua đường, với quy mô và khoảng cách đội hình thay đổi.
-function newSkyFlock(now,originX,playerZ) {
+export function newSkyFlock(now,originX,playerZ,band=0) {
   const direction=Math.random()<.5?-1:1;
-  const depth=Math.random()<.5?76+Math.random()*67:225+Math.random()*154;
+  const depth=76+band*93+Math.random()*59;
+  const heading=direction*(.42+Math.random()*1.82),speed=8+band*6+Math.random()*5;
   const flock={begin:now,x:originX-direction*depth*(.29+Math.random()*.2),z:playerZ+depth,
-    y:32+Math.random()*13,vx:direction*(8+Math.random()*6),vz:9+Math.random()*14,
-    count:5+Math.floor(Math.random()*5),seed:Math.random()*1000};
-  flock.y=flightClearance(flock,12,12);
+    y:32+Math.random()*13,vx:Math.sin(heading)*speed,vz:Math.cos(heading)*speed,
+    count:5+Math.floor(Math.random()*5),seed:Math.random()*1000,band};
+  flock.y=flightClearance(flock,flockDuration,8,22);
   return flock;
 }
 
 // Đưa độ sâu về cùng vòng tuyến với người chơi để chuyến bay không nhảy khi qua điểm nối.
-function skyFlightDepth(z,playerZ,loop) {
+export function skyFlightDepth(z,playerZ,loop) {
   return playerZ+mod(z-playerZ+loop*.5,loop)-loop*.5;
 }
 
-// Dựng máy bay cánh quét, thân có sống lưng và đèn vị trí ở đầu cánh.
-function drawSkyPlane(quad,plane,now,playerZ,loop) {
+// Đặt máy bay GLB theo hướng và vận tốc của chuyến bay.
+function drawSkyPlane(plane,now,playerZ,loop,glbSky){
   const age=now-plane.begin;
   const x=plane.x+age*plane.vx,z=skyFlightDepth(plane.z+age*plane.vz,playerZ,loop);
-  if(z-playerZ<34||z-playerZ>610) return;
-  const yaw=Math.atan2(plane.vx,plane.vz), cos=Math.cos(yaw), sin=Math.sin(yaw), scale=plane.span;
-  // Đổi các điểm cục bộ từ trục thân máy bay sang tọa độ cảnh.
-  function point(side,height,along) {
-    return [x+(side*cos+along*sin)*scale,plane.y+height*scale,z+(along*cos-side*sin)*scale];
-  }
-  const rings=[[-6.7,.25,.31],[-4.6,.67,.72],[.8,1.1,1.04],[4.8,.94,.88],[6.8,.14,.23]];
-  const shell=(section,i)=>{
-    const [along,w,h]=section,a=i*TAU/8;
-    return point(Math.cos(a)*w,Math.sin(a)*h+(along<-4?.14:0),along);
-  };
-  for(let row=1;row<rings.length;row++) for(let i=0;i<8;i++){
-    const tint=i<4?(i%2?'#d4d5c6':'#aebbbd'):(i%2?'#687981':'#83939b');
-    quad(shell(rings[row-1],i),shell(rings[row-1],i+1),shell(rings[row],i+1),shell(rings[row],i),tint,1,-1);
-  }
-  for(const side of [-1,1]){
-    const wing=(a,b,c)=>point(side*a,b,c);
-    quad(wing(.76,.12,2.22),wing(4.15,.20,.08),wing(7.5,.27,-2.19),wing(.72,.09,-1.04),'#abbabe',1,-1);
-    quad(wing(.72,.09,-1.04),wing(7.5,.27,-2.19),wing(8.4,.44,-3.14),wing(5.6,.24,-3.27),'#84959a',1,-1);
-    quad(wing(7.6,.28,-2.05),wing(8.7,.49,-3.06),wing(8.66,.98,-3.48),wing(7.88,.70,-2.64),
-      side<0?'#e98673':'#6bc4b1',1,-1);
-    quad(wing(.41,.17,-4.36),wing(3.05,.26,-5.82),wing(2.95,.37,-6.50),wing(.29,.22,-5.72),'#9cafb4',1,-1);
-    for(let i=0;i<6;i++){
-      const engine=(n,r,at)=>wing(2.13+Math.cos(n*TAU/6)*r,-.37+Math.sin(n*TAU/6)*r,at);
-      quad(engine(i,.43,1.68),engine(i+1,.43,1.68),engine(i+1,.36,-.47),engine(i,.36,-.47),'#aebbb5',1,-1);
-      quad(engine(i,.38,1.69),engine(i+1,.38,1.69),wing(2.13,-.37,1.69),wing(2.13,-.37,1.69),'#3c4c5a',1,-1);
-    }
-    quad(wing(.32,.61,5.38),wing(.65,.65,4.69),wing(.59,.82,4.63),wing(.25,.76,5.23),'#455d68',1,-1);
-  }
-  quad(point(0,.55,-3.96),point(0,2.48,-5.84),point(0,2.27,-6.39),point(0,.43,-6.55),'#9fb8b6',1,-1);
-
+  if(Math.abs(z-playerZ)>650) return;
+  glbSky.drawPlane(x,plane.y,z,Math.atan2(plane.vx,plane.vz),plane.span);
 }
 
-// Vệt khói lưu dấu quỹ đạo cũ, nở rộng và tan dần sau đuôi.
-function drawSkyContrail(quad,plane,now,playerZ,loop){
+// Vẽ vệt ngưng tụ theo đường bay đã đi qua.
+export function drawSkyContrail(quad,plane,now,playerZ,loop){
   if(!plane) return;
   const age=now-plane.begin;
-  const visibleAge=Math.min(age,15);
+  const visibleAge=Math.min(age,planeDuration);
   const speed=Math.hypot(plane.vx,plane.vz);
   const dx=plane.vx/speed,dz=plane.vz/speed;
   function edge(emission,side){
     const elapsed=now-plane.begin-emission;
     const spread=.3+elapsed*.38;
-    const along=emission*speed-6*plane.span;
+    const along=emission*speed-modelMeters.airliner*.42*plane.span;
     const x=plane.x+dx*along+dz*side*spread;
     const z=skyFlightDepth(plane.z+dz*along-dx*side*spread,playerZ,loop);
-    return [x,plane.y+elapsed*.22+side*spread*.31,z];
+    return [x,plane.y-passSample(z,passHeights)+elapsed*.22+side*spread*.31,z];
   }
   const first=Math.max(0,age-8);
   for(let emission=first;emission<visibleAge;emission+=.32){
     const end=Math.min(emission+.32,visibleAge);
     const a=edge(emission,-1), b=edge(emission,1), c=edge(end,1), d=edge(end,-1);
-    if(Math.min(a[2],c[2])-playerZ<11||Math.max(a[2],c[2])-playerZ>650) continue;
+    if(Math.abs(a[2]-playerZ)>650&&Math.abs(c[2]-playerZ)>650) continue;
     const opacity=.52*(1-clamp((age-(emission+end)*.5)/8,0,1))**1.4;
     quad(a,b,c,d,'#bfccdb',opacity,-1);
   }
 }
 
 // Vẽ đàn chim dạng chữ V lệch, mỗi con có nhịp đập cánh riêng.
-function drawSkyFlock(quad,flock,now,playerZ,loop) {
+function drawSkyFlock(flock,now,playerZ,loop,glbSky) {
   const age=now-flock.begin;
   const x=flock.x+age*flock.vx,z=skyFlightDepth(flock.z+age*flock.vz,playerZ,loop);
-  if(z-playerZ<27||z-playerZ>510) return;
+  if(Math.abs(z-playerZ)>540) return;
   const yaw=Math.atan2(flock.vx,flock.vz), cos=Math.cos(yaw), sin=Math.sin(yaw);
   for(let i=0;i<flock.count;i++){
     const seed=flock.seed+i*33;
@@ -188,60 +185,76 @@ function drawSkyFlock(quad,flock,now,playerZ,loop) {
     const spread=rank*4.0*side+(hash(seed)-.5)*1.8, lag=-rank*3.5+(hash(seed+4)-.5)*1.8;
     const size=.83+hash(seed+89)*.48;
     const flap=Math.sin(age*(9+hash(seed+12)*4)+hash(seed+6)*TAU);
-    // Đặt các đỉnh của từng con chim trong đội hình và hướng bay.
-    function point(across,height,along) {
-      const dx=spread+across*size,dz=lag+along*size;
-      return [x+dx*cos+dz*sin,flock.y+(hash(seed+3)-.5)*3+height*size,z+dz*cos-dx*sin];
-    }
-    const beak=point(0,.10,.72), tail=point(0,-.04,-.71), left=point(-.18,0,.1), right=point(.18,0,.1);
-    const breast=point(0,-.18,.19),back=point(0,.17,.12);
-    quad(beak,left,tail,back,'#65716d',1,-1);
-    quad(beak,back,tail,right,'#72817b',1,-1);
-    quad(left,breast,right,beak,'#bac0ac',1,-1);
-    for(const wing of [-1,1]){
-      const root=wing<0?left:right;
-      const elbow=point(wing*.78,flap*.36,.13);
-      const far=point(wing*1.58,flap*.75-.08,-.26);
-      const inner=point(wing*.54,flap*.18,-.39);
-      quad(root,elbow,inner,inner,'#b1b9a7',1,-1);
-      quad(elbow,far,point(wing*1.12,flap*.53,-.49),inner,'#556363',1,-1);
-    }
+    const bx=x+spread*cos+lag*sin, by=flock.y+(hash(seed+3)-.5)*3, bz=z+lag*cos-spread*sin;
+    glbSky.drawBird(bx,by,bz,yaw,size,flap);
   }
 }
 
 // Duy trì lịch xuất hiện ngẫu nhiên của máy bay và đàn chim trong mỗi lượt chơi.
-function drawSkyTraffic3D(quad,origin,originX,playerZ,now,loop,started) {
-  drawCloudField(quad,origin,originX,loop,now);
+export function drawSkyTraffic3D(origin,originX,playerZ,now,loop,started,glbSky) {
+  drawCloudField(origin,originX,loop,now,glbSky);
   if(!started) return;
   const schedule=skyFlightClock;
   if(!schedule.planeAt||now<schedule.last){
     schedule.planeAt=now+2+Math.random()*4;
     schedule.birdsAt=now+1+Math.random()*5;
-    schedule.plane=null;schedule.birds=null;
+    schedule.planes.length=0;schedule.birds.length=0;
   }
   schedule.last=now;
+  for(let i=schedule.planes.length-1;i>=0;i--)
+    if(now-schedule.planes[i].begin>=planeDuration) schedule.planes.splice(i,1);
   if(now>=schedule.planeAt){
-    schedule.plane=newSkyPlane(now,originX,playerZ);
-    schedule.planeAt=now+17+Math.random()*10;
+    if(schedule.planes.length<2){
+      const plane=newSkyPlane(now,origin,originX,schedule.planes);
+      if(plane) schedule.planes.push(plane);
+      schedule.planeAt=now+1+Math.random()*1.4;
+    }else schedule.planeAt=now+.5;
   }
+  for(let i=schedule.birds.length-1;i>=0;i--)
+    if(now-schedule.birds[i].begin>=flockDuration) schedule.birds.splice(i,1);
   if(now>=schedule.birdsAt){
-    schedule.birds=newSkyFlock(now,originX,playerZ);
-    schedule.birdsAt=now+13+Math.random()*19;
+    const available=[0,1,2].filter(band=>!schedule.birds.some(flock=>flock.band===band));
+    if(available.length)
+      schedule.birds.push(newSkyFlock(now,originX,playerZ,available[Math.floor(Math.random()*available.length)]));
+    schedule.birdsAt=now+.7+Math.random()*1.1;
   }
-  if(schedule.plane&&now-schedule.plane.begin<15)
-    drawSkyPlane(quad,schedule.plane,now,playerZ,loop);
-  if(schedule.birds&&now-schedule.birds.begin<12)
-    drawSkyFlock(quad,schedule.birds,now,playerZ,loop);
+  for(const plane of schedule.planes) drawSkyPlane(plane,now,playerZ,loop,glbSky);
+  for(const flock of schedule.birds) drawSkyFlock(flock,now,playerZ,loop,glbSky);
+}
+
+// Vẽ mặt trăng với viền sáng nhẹ và các vùng tối trên bề mặt.
+function drawMoon(context,point,skyLine,opacity){
+  if(!point||opacity<.02) return;
+  const [x,y]=point,radius=clamp(runtime.focal*.015,5,16);
+  if(x<-radius*3||x>runtime.w+radius*3||y<-radius*3||y>skyLine+radius) return;
+  const halo=context.createRadialGradient(x,y,radius*.35,x,y,radius*3);
+  halo.addColorStop(0,'#b2c9ff44');halo.addColorStop(1,'#b2c9ff00');
+  context.save();
+  context.beginPath();context.rect(0,0,runtime.w,skyLine);context.clip();
+  context.globalAlpha=opacity;
+  context.fillStyle=halo;
+  context.beginPath();context.arc(x,y,radius*3,0,TAU);context.fill();
+  const disk=context.createRadialGradient(x-radius*.3,y-radius*.32,0,x,y,radius);
+  disk.addColorStop(0,'#fff8e2');disk.addColorStop(1,'#b3c6e1');
+  context.fillStyle=disk;
+  context.beginPath();context.arc(x,y,radius,0,TAU);context.fill();
+  context.clip();
+  for(let i=0;i<9;i++){
+    context.fillStyle=i%2?'#8c9db046':'#8091aa37';
+    const cx=x+(hash(i+74)-.5)*radius*1.5,cy=y+(hash(i+99)-.5)*radius*1.5;
+    context.beginPath();context.ellipse(cx,cy,radius*(.10+hash(i+113)*.20),radius*.17,i*.9,0,TAU);context.fill();
+  }
+  context.restore();
 }
 
 // Chiếu các điểm trên thiên cầu bằng cùng góc quay với camera lái xe.
 const starField=[];
-function drawCelestialSky(context,skyLine){
+export function drawCelestialSky(context,skyLine){
   function screen(x,y,z){
-    const forward=x*yawSin+z*yawCos;
-    const depth=forward*pitchCos+y*pitchSin;
+    const forward=x*runtime.yawSin+z*runtime.yawCos;
+    const depth=forward*runtime.pitchCos+y*runtime.pitchSin;
     if(depth<=.04) return null;
-    return [cx+(x*yawCos-z*yawSin)*focal/depth,horizon-(y*pitchCos-forward*pitchSin)*focal/depth];
+    return [runtime.cx+(x*runtime.yawCos-z*runtime.yawSin)*runtime.focal/depth,runtime.horizon-(y*runtime.pitchCos-forward*runtime.pitchSin)*runtime.focal/depth];
   }
   if(!starField.length){
     for(let i=0;i<440;i++){
@@ -254,28 +267,37 @@ function drawCelestialSky(context,skyLine){
     context.fillStyle='#dbe8ff';
     for(const [x,y,z,brightness] of starField){
       const point=screen(x,y,z);
-      if(!point||point[0]<0||point[0]>w||point[1]<0||point[1]>skyLine) continue;
-      const size=(.75+brightness*1.5)*Math.max(.8,h/830);
+      if(!point||point[0]<0||point[0]>runtime.w||point[1]<0||point[1]>skyLine) continue;
+      const size=(.75+brightness*1.5)*Math.max(.8,runtime.h/830);
       context.globalAlpha=world.stars*(.28+brightness*.67);
       context.fillRect(point[0],point[1],size,size);
     }
     context.globalAlpha=1;
   }
+  const lunarTime=world.time*TAU/DAY_SECONDS;
+  const moonYaw=.33+.42*Math.sin(lunarTime),moonPitch=.27+.14*Math.cos(lunarTime);
+  const moonPoint=screen(Math.sin(moonYaw)*Math.cos(moonPitch),Math.sin(moonPitch),Math.cos(moonYaw)*Math.cos(moonPitch));
+  drawMoon(context,moonPoint,skyLine,(1-world.daylight)**2*(1-world.fog*.65));
   if(world.sunStrength<.025) return;
   const point=screen(...world.sun);
   if(!point) return;
-  const [x,y]=point,radius=clamp(focal*.035,9,28),halo=radius*3.2;
-  if(x<-halo||x>w+halo||y<-halo||y>skyLine+radius) return;
-  const glow=context.createRadialGradient(x,y,radius*.25,x,y,halo);
-  glow.addColorStop(0,'#ffe4aade');
-  glow.addColorStop(.32,'#ffc68458');
-  glow.addColorStop(1,'#ffc68400');
+  const [x,y]=point,radius=clamp(runtime.focal*.032,9,26),halo=radius*3.4;
+  if(x<-halo||x>runtime.w+halo||y<-halo||y>skyLine+radius) return;
+  context.save();
+  context.beginPath();
+  context.rect(0,0,runtime.w,skyLine);
+  context.clip();
+  const glow=context.createRadialGradient(x,y,radius*.3,x,y,halo);
+  glow.addColorStop(0,'#ffe7b0e8');
+  glow.addColorStop(.35,'#ffc9825c');
+  glow.addColorStop(1,'#ffc98200');
   const animated=usesAnimatedTheme();
-  context.globalAlpha=world.sunStrength*(animated?.27:.66);
+  context.globalAlpha=world.sunStrength*(animated?.35:.62);
   context.fillStyle=glow;
-  context.fillRect(x-halo,y-halo,halo*2,halo*2);
-  if(animated) context.globalAlpha=world.sunStrength*.92;
-  context.fillStyle=world.twilight>.55?'#ffd09c':'#fff1c2';
+  context.beginPath();context.arc(x,y,halo,0,TAU);context.fill();
+  context.globalAlpha=clamp(world.sunStrength*.96,0,1);
+  context.fillStyle=world.twilight>.55?'#ffd09c':'#fff3c9';
   context.beginPath();context.arc(x,y,radius,0,TAU);context.fill();
+  context.restore();
   context.globalAlpha=1;
 }

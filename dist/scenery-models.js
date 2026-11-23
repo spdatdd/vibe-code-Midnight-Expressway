@@ -1,7 +1,7 @@
 'use strict';
 
 // Lưới nguyên bản, dùng chung kích thước và bảng màu cho cả hai mức chi tiết.
-const roadsideModels=(()=>{
+export const roadsideModels=(()=>{
   function bake(draw,detail){
     const positions=[],surfaces=new Map(),vertices=new Map();
     const face=(a,b,c,d,color)=>{

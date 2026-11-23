@@ -1,7 +1,7 @@
 'use strict';
 
 // Quaternius (CC0). Lưới glTF đã chuẩn hóa.
-const terrainModels={
+export const terrainModels={
   // https://poly.pizza/m/7HYR2s9JVi
   hill:{
     positions:[

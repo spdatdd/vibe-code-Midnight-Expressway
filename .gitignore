@@ -1,2 +1,5 @@
 /.openai/
 /openai/
+/tools/node_modules/
+# Model gốc chỉ dùng khi nén lại tài nguyên.
+/assets/models/
